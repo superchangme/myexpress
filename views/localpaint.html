@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <style>
+
+        #menuList{position: absolute;z-index:1000;display: none;}
+        ul{list-style: none}
+        #menuList li a{display: inline-block;width:100px;height:20px;}
+        #menuList li a:hover{background: seagreen;cursor: pointer}
+        .ondraw{cursor: pointer}
+        #canvas{float:left;}
+        #chartBox{float:left;width:500px;height:500px;overflow-y: scroll;}
+    </style>
+</head>
+<body>
+
+<canvas width=500 height=500 style="margin:50px;border:1px solid blue" name="canvas" ></canvas>
+<div id="chartBox">
+
+</div>
+
+<div id="menuList">
+    <ul>
+        <li>
+            <a data-fc="cha">换橡皮擦</a>
+        </li>
+        <li>
+            <a data-fc="hua">换画笔</a>
+        </li>
+    </ul>
+
+</div>
+<script src="../public/javascripts/jquery-1.11.0.min.js"></script>
+<script src="../public/javascripts/socket.io.js" type="text/javascript"></script>
+<script>
+    var canvas=document.getElementsByName("canvas");
+    for(var i=0;i<canvas.length;i++){
+        var ctx=canvas[i].getContext("2d");
+        ctx.strokeStyle="blue";
+    }
+
+    //var socket = io.connect('http://www.superchangme.com:3000/');
+    // 创建一个Socket实例
+    var socket = new WebSocket('ws://127.0.0.1:3000');
+
+    // 打开Socket
+    socket.onopen = function(event) {
+
+        // 发送一个初始化消息
+        socket.send('I am the client and I\'m listening!');
+
+        // 监听消息
+        socket.onmessage = function(event) {
+            console.log('Client received a message',event);
+        };
+
+        // 监听Socket的关闭
+        socket.onclose = function(event) {
+            console.log('Client notified socket has closed',event);
+        };
+
+        // 关闭Socket....
+        //socket.close()
+    };
+    /*
+    var socket = io.connect('127.0.0.1:3000');*/
+    var Draw=(function(){
+        var draw =function(color,lineWidth,lineStyle){
+            ctx.strokeStyle=color;
+            ctx.lineWidth=lineWidth;
+            ctx.lineCap=ctx.lineJoin=lineStyle?lineStyle:"";
+            this.isMenuOn=false;
+            this.isMove=false;
+            this.init();
+        }
+        draw.prototype.begin=function(){
+            var me=this;
+            $(canvas).bind("mousedown",$.proxy( me, "record" )) ;
+            $(canvas).bind("mousemove",$.proxy( me, "paint" )) ;
+            $(canvas).bind("mouseup",$.proxy( me, "close" )) ;
+            socket.on('paint act', function(msg) {
+                var e={which:msg.which,offsetX:msg.offsetX,offsetY:msg.offsetY};
+                switch(msg.func){
+                    case "paint":
+                        me.paint(e);
+                        break;
+                    case "record":
+                        me.record(e);
+                        break;
+                    case "close":
+                        me.close(e);
+                        break;
+                    case "drop":
+                        me.drop(e);
+                        break;
+                    case "wipe":
+                        me.wipe(e);
+                        break;
+                    case "draw":
+                        me.draw(e);
+                        break;
+
+
+                }
+            });
+            $("#menuList").delegate("a","click",function(){
+
+                $("#menuList").hide();
+                if($(this).data("fc")=="cha"){
+                    ctx.strokeStyle="white";
+                }else{
+                    ctx.strokeStyle="red";
+                }
+                me.isMenuOn=false;
+            });
+        }
+
+        draw.prototype.paint=function(e){
+            var x= e.offsetX,y= e.offsetY;
+
+            if(this.isMove){
+                ctx.lineTo(x, y);
+                console.log("paint in",e)
+                ctx.stroke();
+            }
+        }
+
+        draw.prototype.record=function(e){
+            console.log("record in",e)
+            var x= e.offsetX,y= e.offsetY;
+            if(this.isMenuOn){
+
+
+            }else{
+                if(e.which===1){
+                    this.isMove=true;
+                    ctx.beginPath();
+                    ctx.moveTo(x,y);
+                    $(canvas).addClass("ondraw");
+                }else if(e.which==3){
+                    var top= e.pageY-20,left= e.pageX-20;
+                    console.log(top,left)
+                    $("#menuList").css({top:top,left:left}).show();
+                    this.isMenuOn=true;
+                }
+            }
+        }
+
+        draw.prototype.close=function(e){
+            console.log("close in",e)
+            this.isMove=false;
+            $(canvas).removeClass("ondraw");
+            ctx.closePath();
+        }
+
+        draw.prototype.init=function(){
+            this.begin();
+        }
+
+        draw.prototype.drop=function(){
+            console.log("drop in----",canvas.width);
+            ctx.clearRect(0,0,canvas[0].width,canvas[0].height);
+        }
+
+        draw.prototype.wipe=function(e){
+            var x= e.offsetX,y= e.offsetY;
+            if(this.isMove){
+                ctx.clearRect(x, y,20,10);
+                console.log("wipe in",e)
+            }
+        }
+
+
+        return draw;
+
+    })();
+
+    $(canvas).bind("mousedown",function(e) {
+        update(e,"record");
+    }) ;
+
+    $(canvas).bind("mousemove",function(e){
+        update(e,"paint");
+    }) ;
+
+    $(canvas).bind("mouseup",function(e){
+        update(e,"close");
+    }) ;
+
+
+    function update(e,act){
+        socket.emit('paint msg', {
+            func : act,
+            offsetX :e.offsetX,
+            offsetY :e.offsetY,
+            which :e.which
+        });
+    }
+
+    $(function(){
+
+        var draw= new Draw("red",10,"round");
+
+        $(document).bind("contextmenu",function(){return false;});
+
+
+
+    })
+</script>

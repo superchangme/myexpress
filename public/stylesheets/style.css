@@ -1,0 +1,17 @@
+body {
+  padding-top: 50px ;
+}
+footer {
+  text-align: center;
+}
+.reg-page .main-container {
+  margin-top: 50px;
+}
+.reg-page .ruler {
+  height: 100px;
+  width: 200px;
+  border: 2px dotted #cccccc;
+}
+.reg-page .over {
+  background: #269abc;
+}

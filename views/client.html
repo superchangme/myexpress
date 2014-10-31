@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+		<title>NodeJS & WebSocket</title>
+		<meta name="description" content="" />
+		<meta name="author" content="可乐加糖" />
+		<meta name="viewport" content="width=device-width; initial-scale=1.0" />
+		<!-- Replace favicon.ico & apple-touch-icon.png in the root of your domain and delete these references -->
+		<link rel="shortcut icon" href="/favicon.ico" />
+		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+		<style type="text/css">
+			#box {
+				overflow: auto;
+				width: 500px;
+				height: 300px;
+				border: 1px solid #dcdcdc;
+				padding:10px;
+				margin:0 0 10px 0;
+				font-size:12px;
+				font-family: Arial, Helvetica, sans-serif;
+			}
+			#txtInput {
+				width: auto;
+				height: 35px;
+				line-height: 35px;
+				font-size:14px;
+				border:1px solid #ccc;
+			}
+			.error{
+				box-shadow: 0 0 3px #ff0000;
+			}
+			.button {
+				display: inline-block;
+				outline: none;
+				cursor: pointer;
+				text-align: center;
+				text-decoration: none;
+				font: 14px/100% Arial, Helvetica, sans-serif;
+				padding: .5em 2em .55em;
+				text-shadow: 0 1px 1px rgba(0,0,0,.3);
+				-webkit-border-radius: .5em; 
+				-moz-border-radius: .5em;
+				border-radius: .5em;
+				-webkit-box-shadow: 0 1px 2px rgba(0,0,0,.2);
+				-moz-box-shadow: 0 1px 2px rgba(0,0,0,.2);
+				box-shadow: 0 1px 2px rgba(0,0,0,.2);
+			}
+			.button:hover {
+				text-decoration: none;
+			}
+			.button:active {
+				position: relative;
+				top: 1px;
+			}
+			.orange {
+				color: #fef4e9;
+				border: solid 1px #da7c0c;
+				background: #f78d1d;
+				background: -webkit-gradient(linear, left top, left bottom, from(#faa51a), to(#f47a20));
+				background: -moz-linear-gradient(top,  #faa51a,  #f47a20);
+				filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#faa51a', endColorstr='#f47a20');
+			}
+			.orange:hover {
+				background: #f47c20;
+				background: -webkit-gradient(linear, left top, left bottom, from(#f88e11), to(#f06015));
+				background: -moz-linear-gradient(top,  #f88e11,  #f06015);
+				filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#f88e11', endColorstr='#f06015');
+			}
+			.orange:active {
+				color: #fcd3a5;
+				background: -webkit-gradient(linear, left top, left bottom, from(#f47a20), to(#faa51a));
+				background: -moz-linear-gradient(top,  #f47a20,  #faa51a);
+				filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#f47a20', endColorstr='#faa51a');
+			}
+		</style>
+		<script src="http://127.0.0.1:8888/socket.io/socket.io.js"></script>
+		<script type="text/javascript">
+			var socket = io.connect('http://127.0.0.1:8888/');
+            // 创建一个Socket实例
+            var socket = new WebSocket('ws://127.0.0.1:8080');
+
+            // 打开Socket
+            socket.onopen = function(event) {
+
+                // 发送一个初始化消息
+                socket.send('I am the client and I\'m listening!');
+
+                // 监听消息
+                socket.onmessage = function(event) {
+                    console.log('Client received a message',event);
+                };
+
+                // 监听Socket的关闭
+                socket.onclose = function(event) {
+                    console.log('Client notified socket has closed',event);
+                };
+
+                // 关闭Socket....
+                //socket.close()
+            };
+			//Comet
+			socket.on('user message', function(msg) {
+				msgbox(msg.msg);
+			});
+			//发送消息
+			function sendMsg() {
+				var inpt = document.getElementById('txtInput');
+				var str = inpt.value;
+				if(str.length==0){
+					inpt.className="error";
+					alert("请输入发送的消息内容");
+					return false;
+				}
+				inpt.className = "";
+				msgbox(str);
+				//发送消息至服务器的Scoket。
+				socket.emit('msg', {
+					msg : str
+				});
+				console.log('[client]' + str);
+				inpt.value = "";
+				inpt.focus();
+			}
+			function msgbox(str) {
+				var box = document.getElementById('box');
+				box.innerHTML += str + '<br>';
+			}
+			window.onload = function(){
+				document.body.onkeypress = function(event){
+					var e = window.event || event;
+					if(e.keyCode==13){
+						sendMsg();
+					}
+				}
+			}
+		</script>
+	</head>
+	<body>
+		<h2>简单的聊天室</h2>
+		<hr/>
+		<div id='box' ></div>
+		<input type='text' placeholder="请输入内容" id='txtInput' >
+		<input type='button' class="button orange" value='发送' onkeypress="sendMsg()" onclick='sendMsg();'>
+	</body>
+</html>

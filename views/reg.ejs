@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- Meta, title, CSS, favicons, etc. -->
+    <meta charset="utf-8">
+    <title>my order</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link href="stylesheets/bootstrap.min.css" rel="stylesheet">
+    <link href="stylesheets/bootstrap-theme.min.css" rel="stylesheet">
+    <link href="stylesheets/style.css" rel="stylesheet">
+    <link href="stylesheets/layout.css" rel="stylesheet">
+    <link href="stylesheets/deal.css"   rel="stylesheet">
+    <link rel="shortcut icon" href="ico/favicon.png">
+
+    <!-- HTML5 Shim and Respond.javascripts IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.javascripts doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+    <script src="javascripts/html5shiv.min.javascripts"></script>
+    <script src="javascripts/respond.min.javascripts"></script>
+    <![endif]-->
+</head>
+<body>
+<div class="page reg-page">
+    <% include head.ejs %><!--// header end-->
+    <div class="main-container  container">
+        <div class="row">
+            <form class="col-sm-10 col-sm-offset-1 form-horizontal" action="/reg" method="post" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="name" class="col-sm-2 control-label">name</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" name="user[username]" id="name" >
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="password" class="col-sm-2 control-label">password</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" name='user[password]' id="password" >
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="rePassword" class="col-sm-2 control-label">repeat password</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" id="rePassword" name="rePassword" >
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="age" class="col-sm-2 control-label">age</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" name='user[age]'  id="age" >
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="headerImg" class="col-sm-2 control-label">headerImg</label>
+                    <div class="col-sm-2">
+                        <div id="targetBox" class="ruler text-center" draggable="true"
+                                >
+                            drag image in this box
+                            <div id="fileList"></div>
+                        </div>
+                        <!--
+                                            <input type="file" class="form-control" id="headerImg" name="headerImg" >
+                        -->
+                    </div>
+                    <div class="col-sm-offset-2 col-sm-4 well">
+                        <img src="" width="120" height="180" id="headerImgPrev">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="" class="col-sm-2 control-label">hobby</label>
+                    <div class="col-sm-10">
+                        <select multiple name="user[hobby]" class="form-control">
+                            <option value="sing">
+                                sing
+                            </option>
+                            <option value="dance">
+                                dance
+                            </option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-sm-10 col-sm-offset-2">
+                        <button class="btn btn-primary" type="submit">注册</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div><!--// main-container end-->
+    <% include foot.ejs %><!--// foot end-->
+
+    <div id="test" style="height:300px">
+
+    </div>
+
+</div>
+</body>
+<script src="javascripts/jquery-1.11.0.min.js"></script>
+<script src="javascripts/bootstrap.min.js"></script>
+<script src="javascripts/ajax-upload-file.js"></script>
+<script>
+
+    $.ajaxUpload({dragBox:"targetBox",fileList:"fileList",postUrl:"/uploadFile",fileName:"headerImg",callback:function(data){
+          if(data.filePath){
+              document.getElementById("headerImgPrev").src=data.filePath;
+          }
+
+    }});
+</script>
+</html>

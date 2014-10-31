@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+<head>
+    <!-- Meta, title, CSS, favicons, etc. -->
+    <meta charset="utf-8">
+    <title>my order</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link href="stylesheets/bootstrap.min.css" rel="stylesheet"/>
+    <link href="stylesheets/bootstrap-theme.min.css" rel="stylesheet"/>
+    <link href="stylesheets/style.css" rel="stylesheet"/>
+    <link href="stylesheets/layout.css" rel="stylesheet"/>
+    <link href="stylesheets/deal.css"   rel="stylesheet"/>
+    <link rel="shortcut icon" href="ico/favicon.png">
+
+    <!-- HTML5 Shim and Respond.javascripts IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.javascripts doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+    <script src="javascripts/html5shiv.min.javascripts"></script>
+    <script src="javascripts/respond.min.javascripts"></script>
+    <![endif]-->
+</head>
+<body>
+<div class="page">
+    <header class=" ">
+    </header><!--// header end-->
+    <div class="main-container container well">
+        <div class="row">
+              <div class="col-sm-4"><img width="100%" src="<%=user["headerImgPath"]%>"/></div>
+              <div class="col-sm-8">
+                  <div class="h1"></div>
+                  <div><span>hobby:</span><%=user["hobby"]%></div>
+              </div>
+        </div>
+    </div>
+    <footer >
+    </footer>
+</div>
+</body>
+<script src="javascripts/jquery-1.11.0.min.js"></script>
+<script src="javascripts/bootstrap.min.js"></script>
+<script>
+    $(function(){
+
+    });
+
+
+</script>
+</html>
