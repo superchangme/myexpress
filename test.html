@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+
+</body>
+<script>
+
+    function arrToPlain2(o){
+        var r=[];
+        (function(o) {
+            if (o != undefined &&  Object.prototype.toString.apply(o).slice(8,-1) == "Array") {
+                for (var i = 0, l = o.length; i < l; i++) {
+                    arguments.callee.call(null,o[i]);
+                }
+            } else {
+                r.push(o);
+            }
+        })(o);
+        return r;
+    }
+    function arrToPlain(o){
+     var r=[],count= 0,to=function(o){
+         if(Object.prototype.toString.apply(o).slice(8,-1)!="Array"){
+             r.push(o)
+         }else{
+             return o.forEach(function(o){
+                return end(o);
+                /* try{
+                     return end(p).concat(end(n));
+                 }catch(e){
+                     console.log(e)
+                 }*/
+             })
+
+         }
+         return r;
+     },end=function(b){
+         to(b);
+          /* if( Object.prototype.toString.apply(b).slice(8,-1)!="Array"){
+               return to(b);
+           }else{
+               return to(b);
+           }*/
+        };
+        end(o)
+        return r;
+    }
+    [1].reduce(function(a,b){console.log(a,b)})
+</script>
+</html>

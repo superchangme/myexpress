@@ -74,11 +74,11 @@
             {
                 console.log("file---"+file.name+"----上传成功；",xhr.responseText);
                 var data=(function(){ var data={};
-                     try{
-                         data=JSON.parse(xhr.responseText)
-                     }finally{
-                         return data;
-                     }
+                    try{
+                        data=JSON.parse(xhr.responseText)
+                    }finally{
+                        return data;
+                    }
                 })(),filePath;
                 if(data.filePath){
                     if(typeof data.filePath.push ==="function"){
@@ -126,7 +126,7 @@
     }
 
     $.ajaxUpload=function (option) {
-       return new ajaxUpload(option).init();
+        return new ajaxUpload(option).init();
     }
 })(jQuery);
 

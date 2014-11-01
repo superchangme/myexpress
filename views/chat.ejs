@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link href="/stylesheets/bootstrap.min.css" rel="stylesheet">
+    <link href="/stylesheets/bootstrap-theme.min.css" rel="stylesheet">
+     <style>
+         #menuList{position: absolute;z-index:1000;display: none;}
+         ul{list-style: none}
+         #menuList li a{display: inline-block;width:100px;height:20px;}
+         #menuList li a:hover{background: seagreen;cursor: pointer}
+         .ondraw{cursor: pointer}
+         .container{position: relative;}
+         #chartBox{
+             width: calc(100% - 150px);
+             height: 500px;
+             overflow: auto;
+             border: 2px double deepskyblue;
+             float:left;
+         }
+         #userList{
+             float: left;
+             width: 150px;
+             height: 500px;
+             overflow: auto;
+             border: 2px double deepskyblue;
+             border-width: 2px 2px 2px 0;
+         }
+         .container{
+             width: 600px;
+         }
+     </style>
+</head>
+<body>
+<h3>欢迎来到【<span id="roomName"></span>】聊天室，</h3>
+<div class="container">
+    <div id="chartBox">
+    </div>
+    <div id="userList">
+        <h4>用户列表</h4>
+         <ul>
+         </ul>
+    </div>
+    <div>
+        打字：<textarea id="text" row="5" cols="20"></textarea>
+        发送图片:<input type="file" id="imgFile">
+        发送文件:<input type="file" id="binaryFile">
+        <img class="hidden" id="previewImg"/>
+        <button id="btn">发送</button>
+        <a id="fileLink" class="">aaaaa</a>
+    </div>
+</div>
+<canvas id="canvas" width="500" height="500" class="hidden"></canvas>
+</body>
+<script src="/socket.io/socket.io.js" type="text/javascript"></script>
+<script src="/javascripts/require.js"></script>
+<script src="/javascripts/config.js"></script>
+<script type="text/html" id="fileReceiveTpl">
+<div id="{{uuid}}" data-from="{{from}}" data-filename='{{fileName}}'>
+    <span>【{{from}}】+发送 {{fileName}} 给你，是否接收?</span>
+    <button  class='accept btn-sm btn-success'>接收</button>
+    <i> / </i> <button  class='refuse btn-sm btn-warning'>拒绝</button>
+    <progress value="0" max="100" class="hidden"></progress>
+</div>
+</script>
+<script type="text/html" id="fileSendTpl">
+    <div id="{{uuid}}-send"  >
+        <span>{{fileName}} 文件发送中...</span>
+        <progress value="0" max="100" class="hidden"></progress>
+    </div>
+</script>
+
+<script>
+    require(['jquery',"jquery.cookie","uuid","filereader","tmpl"], function( $ ,a,b,c,tmpl) {
+        var canvas=$("#canvas")[0],ctx=canvas.getContext("2d");
+        var socket = io.connect(_server),chartBox=$("#chartBox"),isRoomReady=false,
+                roomId="<%=roomId%>",lineHeight,fileReady=false,
+                fileStore={},fileLists={},fileReceive={};
+
+        $("#chartBox").on("click.file",".accept",function(){
+            fileAccept($(this).parent().attr("id"),1)
+        });
+        $("#chartBox").on("click.file",".refuse",function(){
+            fileAccept($(this).parent().attr("id"),0)
+        });
+        $("#btn").on("click",function() {
+            var text = $("#text").val();
+            if (text != "" ) {
+                sendMess(text);
+                $("#text").val("");
+            }
+            // ctx.drawImage(imgFile.files[0],0,0);
+            if(imgFile.value!=""){
+                readAsDataURL(imgFile,null,function(r,s){//r :image data//s: compress ratio
+                    compressImg(r,s,function(r){
+                        sendMess(r,"image");
+                    });
+                });
+                $("#imgFile").after($("#imgFile").clone()).remove();
+            }
+            if(binaryFile.value!==""){
+                var uuid=Math.uuidFast();
+                fileStore[uuid]={};
+                fileStore[uuid].file=binaryFile.files[0];
+                fileStore[uuid].ready=false;
+                fileStore[uuid].text=text;
+                fileReceive[uuid]={};
+                fileReceive[uuid].filename=binaryFile.files[0].name;
+                sendMess("发送文件","fileBeforeSend",uuid,0,0,fileStore[uuid].file.name);
+                $("#binaryFile").after($("#binaryFile").clone()).remove();
+            }
+
+        });
+        if($.cookie("nickname")==null && $.cookie("chatRoom_"+roomId)==null){
+            socket.emit("in room",{roomId:roomId});
+        }else{
+            socket.emit("join room",{roomId:roomId,name: $.cookie("nickname")},function(){
+                initRoom();
+            });
+        }
+
+        socket.on('in room ready', function(msg) {
+            console.log('in room ready',msg)
+            if(msg.failed==true){
+                window.location.href="/chat_room";
+                return;
+            }
+            inRoomTips();
+        });
+
+        socket.on("online list",function(users){
+            if(users&&typeof  users.push==="function"){
+                var list=[];
+                for(var i in users){
+                    var after="";
+                    if(users[i].creator){
+                        after=" [创建者]"
+                    }else if(users[i].name==$.cookie("nickname")){
+                        after=" [我自己]"
+                    }
+                    list.push($("<li><a href='javascript:void(0)'>"+users[i].name+"</a>"+after+"</li>"));
+                }
+                $("#userList ul").html(list);
+            }
+        })
+        //收到新消息
+        socket.on('chat receive', function(msg) {
+            //console.log("receive",msg)
+            var content,div,reader,messDom=$("<div/>"),box=$("#"+msg.uuid);
+            if($.type(msg.to)=="array"&&msg.to.length!=0){
+                content="["+msg.from+"]"+" 对你说:";
+            }else if(msg.type.indexOf("file")>-1){
+                content="[系统管理员]"+" :";
+            }else{
+                content="["+msg.from+"]:";
+            }
+            switch(msg.type){
+                case "text":
+                    content+=unescape(escape(msg.text).replace(/%0A/g,"%3Cbr/%3E"));
+                    break;
+                case "image":
+                    content+="<img width='50%' src='"+msg.text+"'/>";
+                    console.log("after"+content.length);
+                    break;
+                case "fileBeforeSend":
+                    content=tmpl("fileReceiveTpl",msg);
+                    break;
+                case "fileAccept":
+                    if(msg.text==true){
+                        sendFile(fileStore[msg.uuid],msg.uuid);
+                        msg.fileName=fileStore[msg.uuid].fileName;
+                        content=tmpl("fileSendTpl",msg);
+                        console.log(content)
+                    }else{
+                    }
+                    break;
+                case "fileRefuse":
+                    if(msg.text==true){
+                        //对方取消了文件接收
+                        fileStore[uuid]=null;
+                    }
+                    break;
+                case "fileSend":
+                    if(fileLists[msg.uuid]==null){
+                        fileLists[msg.uuid]=[];
+                    }
+                    //console.log("in",parseInt(msg.filePart))
+                    fileLists[msg.uuid][parseInt(msg.filePart)]=msg.text;
+                    if(msg.fileEnd==true){
+                        //console.log(fileLists[msg.uuid])
+                            var blob=new Blob(fileLists[msg.uuid]);
+                            fileLists[msg.uuid]=null;
+                            $("#fileLink").attr("href",URL.createObjectURL(blob));
+                            var aLink=document.createElement("a"),evt = document.createEvent("HTMLEvents");
+                            evt.initEvent("click", false, false);//initEvent 不加后两个参数在FF下会报错, 感谢 Barret Lee 的反馈
+                            aLink.download = msg.fileName;
+                            aLink.href = URL.createObjectURL(blob);
+                            document.body.appendChild(aLink);
+                            aLink.dispatchEvent(evt);
+                            $("#fileLink").trigger("click");
+                            content="您成功了接收 "+box.data("from")+" 发送的"+box.data("filename")+" 文件";
+                            updateMessBox(messDom);
+                            box.parent().remove();
+                            sendMess("success","fileReceive",msg.uuid);
+                    }else{
+                        updateProgress(box,msg.filePer,msg.filePart);
+                        return;
+                    }
+                    break;
+                case "fileReceive":
+                    if(msg.text=="success"&&fileReceive[msg.uuid]){
+                        content+=msg.from+" 已收到你的文件 "+fileReceive[msg.uuid].filename;
+                    }
+            }
+           messDom.html(content);
+           updateMessBox(messDom)
+        });
+        //加入房间成功
+        socket.on('join room ready', function(msg) {
+            if(msg.failed==true){
+                window.location.href="/chat_room";
+                return;
+            }
+            initRoom(msg);
+            console.log(msg.nickname+"已加入"+msg.room+"聊天室")
+        });
+        //提示加入房间
+        function inRoomTips(){
+            var nickname;
+            if(!isRoomReady){
+                if(nickname=window.prompt("输入你的昵称","匿名者")){
+                    socket.emit("join room",{roomId:roomId,name:nickname});
+                }
+            }
+        }
+        function initRoom(msg){
+            isRoomReady=true;
+            if(msg&&msg.room){
+                $.cookie("nickname",msg.nickname);
+                $.cookie("chatRoom_"+roomId,msg.room)
+                $("#roomName").text(msg.room);
+            }else{
+                $("#roomName").text($.cookie("chatRoom_"+roomId));
+            }
+
+        }
+        //发送消息
+        function sendMess(data,type,uuid,part,percent,name,filetype,end){
+            if(isRoomReady){
+                var from=$.cookie("nickname"),mess={},to=/@([^@^\s]+)/g,
+                        r,to_user=[],type=type||"text",text;
+                if(type=="fileSend"){
+                    text=fileStore[uuid].text;
+                }else{
+                    text=$("#text").val();
+                }
+                while((r=to.exec(text)) != null){
+                    to_user.push(r[1]);
+                }
+                if(type=="text"){
+                    data=data.replace(/@([^@^\s]+)/g,"");
+                }
+                if(to_user){
+                    mess.to=to_user;
+                }
+               $.extend(mess,
+                       {fileType:filetype,
+                           uuid:uuid,filePart:part,filePer:percent,
+                           fileEnd:end,fileName:name,
+                           type:type,text: data,
+                           roomId:roomId, from:from}
+               );
+               socket.emit('chat send', mess);
+            }
+        }
+
+        //compress img
+        function compressImg(r,s,cb){
+            var img=$("#previewImg")[0],type= /data:(image[^;]*);base64/.exec(r)[1];
+            if(s==1)
+                return r;
+            img.src=r;
+            img.onload=function() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0, img.width, img.height);
+                //console.log(canvas.toDataURL(type))
+                cb(canvas.toDataURL(type))
+            }
+        }
+
+
+        /*$('<iframe id="fileFrame"  class="hidden"></iframe>').appendTo("body").on("load",function(){
+         $(this).contents().find("body").html("<a target='_blank' id='fileLink'></a>");
+         }).attr("src","about:blank");*/
+        function sendFile(store,uuid){
+            readAsBinaryString(store.file,function(r,part,percent,name,filetype,end){
+                var end=end||false;
+                sendMess(r,"fileSend",uuid,part,percent,name,filetype,end);
+                updateProgress($("#"+uuid+"-send"),percent,part);
+                if(end){
+                    fileStore[uuid]=null;
+                }
+            });
+        }
+        function fileAccept(uuid,flag){
+            var messDom=$("<div/>"),box;
+            if(flag){
+                sendMess("1","fileAccept",uuid);
+            }else{
+                box=$("#"+uuid);
+                sendMess("1","fileRefuse");
+                messDom.html("您拒绝了接收 "+box.data("from")+" 发送的"+box.data("filename")+" 文件");
+                updateMessBox(messDom);
+                box.parent().remove();
+            }
+        }
+
+        function updateMessBox(messDom){
+            messDom.appendTo(chartBox);
+            if($("#chartBox").prop("scrollHeight")>$("#chartBox").height()){
+                $("#chartBox").scrollTop($("#chartBox").prop("scrollHeight")-$("#chartBox").height());
+            }
+        }
+        function updateProgress(box,per,part){
+            if(part==0){
+                box.find("progress").removeClass("hidden");
+                box.find("button").remove();
+            }
+            box.find("progress").attr("value",parseInt(per));
+        }
+
+
+        //点击人名单独发送聊天信息
+        $("#userList ul").on("click","a",function(){
+            $("#text").val($("#text").val()+" @"+$(this).text()+" ")
+        });
+    });
+</script>
+</html>

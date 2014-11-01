@@ -26,16 +26,16 @@ exports.login = function(req, res){
 };
 exports.doLogin=function(req,res){
         var loginUser=req.body.user;
-        console.log("post paint in-----",req.session.user)
-        if(req.session.user){
+        //console.log("post paint in-----",req.session.user)
+        if(req.session.user!=null){
             res.redirect('paint');
         }else{
             User.findOne(loginUser,function(err,doc){
-                //console.log(loginUser,"find user---",doc)
+              //  console.log(loginUser,"find user---",doc)
                 if(doc){
                     //set into user session
                     //usersWs[doc.name]=doc;
-                    req.session.user={username:doc.username};
+                    req.session.user=doc;
                     res.redirect('/paint');
                 }else{
                     res.render('login',{message:'username or password is wrong'});
@@ -77,10 +77,10 @@ exports.addOrUpdate=function(req,res){
                 console.log("save user---",json,req.body);
                  User.save(json,function(err){
                      if(err){
-                         res.send({"success":false,"err":err});
+                         res.status("500").send({"success":false,"err":err});
                      }else{
                          req.session.user=json;
-                         res.send({"success":true});
+                         res.status("200").send({"success":true});
                      }
                  })
              }

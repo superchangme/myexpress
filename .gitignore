@@ -1,0 +1,7 @@
+*.idea
+.idea
+idea
+node_modules
+public/userData
+temp
+!/*.gitignore
