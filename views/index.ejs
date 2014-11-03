@@ -3,10 +3,47 @@
 <head lang="en">
     <meta charset="UTF-8">
     <title></title>
+    <link rel="stylesheet" href="/stylesheets/foundation.css" />
+    <link rel="stylesheet" href="/stylesheets/style.css" />
+    <script src="/javascripts/vendor/modernizr.js"></script>
+    <style>
+        h2{
+            text-align: center;
+        }
+        img{
+            margin: 0 auto;
+        }
+    </style>
 </head>
 <body>
 <% include head.ejs %>
-<a href="login">login in</a>
+<div class="row">
+    <ul class="example-orbit-content" data-orbit>
+        <li data-orbit-slide="headline-1">
+            <div>
+                <h2>和队长合影</h2>
+                <img align="center" src="/images/psu.jpg"/>
+            </div>
+        </li>
+        <li data-orbit-slide="headline-2">
+            <div>
+                <h2>独醉</h2>
+                <img src="/images/psu%20(1).jpg"/>
+            </div>
+        </li>
+        <li data-orbit-slide="headline-3">
+            <div>
+                <h2>室友们</h2>
+                <img src="/images/psu%20(2).jpg"/>
+            </div>
+        </li>
+    </ul>
+</div>
 <% include foot.ejs %>
 </body>
+<script src="/javascripts/vendor/jquery.js"></script>
+<script src="/javascripts/foundation.min.js"></script>
+<script>
+    $(document).foundation();
+</script>
 </html>

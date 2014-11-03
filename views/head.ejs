@@ -1,27 +1,55 @@
-<div class="navbar navbar-inverse navbar-fixed-top">
-    <div class="container">
-        <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand hidden-sm" href="/">tom.chang乐园</a>
-        </div>
-        <div class="navbar-collapse in" style="height: auto;">
-            <ul class="nav navbar-nav">
+<div class="off-canvas-wrap" data-offcanvas>
+    <div class="inner-wrap">
+        <nav class="tab-bar">
+            <section class="left-small">
+                <a class="left-off-canvas-toggle menu-icon" href="#"><span></span></a>
+            </section>
+
+            <section class="middle tab-bar-section">
+                <h1 class="title">tom chang 乐园</h1>
+            </section>
+
+            <section class="right-small">
+                <a class="right-off-canvas-toggle menu-icon" href="#"><span></span></a>
+            </section>
+        </nav>
+
+        <aside class="left-off-canvas-menu">
+            <ul class="off-canvas-list">
                 <li><a href="/">首页</a></li>
                 <li class="dropdown">
-                    <a href="/chat_room" class="dropdown-toggle" data-toggle="dropdown">聊天吧<b class="caret"></b></a>
+                    <a class="dropdown-toggle" data-toggle="dropdown">走进乐园</a>
                     <ul class="dropdown-menu">
                         <li class="">
-                            <a href="http://v2.bootcss.com/getting-started.html" target="_blank">起步</a>
+                            <a href="/login">我来了</a>
                         </li>
-
+                        <li class="">
+                            <a href="/reg">我也来</a>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="/chat_room" >聊天吧<b class="caret"></b></a>
+                </li>
+                <li class="dropdown">
+                    <a class="dropdown-toggle" data-toggle="dropdown">小游戏</a>
+                    <ul class="dropdown-menu">
+                        <li class="">
+                            <a href="/games/shudu">数独</a>
+                        </li>
                     </ul>
                 </li>
                 <li><a href="about.html">关于</a></li>
             </ul>
-        </div>
-    </div>
-</div>
+        </aside>
+
+        <aside class="right-off-canvas-menu">
+            <ul class="off-canvas-list">
+                <li><label>Users</label></li>
+                <li><a href="#">Hari Seldon</a></li>
+                <li><a href="#">...</a></li>
+            </ul>
+        </aside>
+
+        <section class="main-section">
+            <!-- content goes here -->

@@ -7,6 +7,7 @@ var express = require('express');
 var routes = require('./routes');
 var user = require('./routes/user');
 var chat = require('./routes/chat');
+var games = require('./routes/games');
 var upload = require('./routes/upload');
 var http = require('http');
 var https = require('https');
@@ -75,13 +76,14 @@ if ('development' == app.get('env')) {
 
 
 app.get('/', routes.index);
-app.all(/\/(?!^(login|doLogin|reg|chat.*)$)^[\S]+$/,authentication);
+app.all(/\/(?!^(login|doLogin|reg|chat.*|games\/*)$)^[\S]+$/,authentication);
 app.all('/login', notAuthentication);
 app.post('/doLogin',user.doLogin);
 app.get('/users', user.list);
 app.get('/client', user.client);
 app.get('/phoneUser', user.phoneUser);
 app.get("/reg",user.reg);
+app.post('/reg',user.addOrUpdate);
 app.get("/userProfile",user.userProfile);
 app.get("/showUserImg",user.showUserImg);
 app.get('/logout', authentication);
@@ -117,6 +119,7 @@ app.post("/chat_room",function(req,res){
     res.redirect('/paint');
 });
 
+app.get("/games/shudu",games.shudu);
 
 var server=http.createServer(app/*options,app*/).listen(app.get('port'), function(){
 

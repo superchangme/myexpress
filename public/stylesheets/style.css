@@ -1,5 +1,5 @@
 body {
-  padding-top: 50px ;
+  background: lightsteelblue;
 }
 footer {
   text-align: center;
@@ -14,4 +14,7 @@ footer {
 }
 .reg-page .over {
   background: #269abc;
+}
+.red {
+  color: red;
 }
