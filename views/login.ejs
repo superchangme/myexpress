@@ -14,6 +14,9 @@
     name:<input name='user[username]' value="" type='text' >
     password:<input name='user[password]' value="" type='password' >
     <input type="submit" value="进入聊天" >
+    <%if(typeof(redirect)!=="undefined"&&redirect){%>
+    <input type="hidden" name="redirect" value="<%=redirect%>"/>
+    <%}%>
 </form>
 
 </body>

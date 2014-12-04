@@ -27,6 +27,7 @@ exports.push = function (req, res) {
 };
 
 exports.main=function(req,res){
+    console.log("in-chat----",req.route,req.params,req.query)
     res.render('chat', { title: 'Express' ,roomId:req.params.id});
 }
 

@@ -34,7 +34,7 @@
                 <div class="form-group">
                     <label for="rePassword" class="col-sm-2 control-label">repeat password</label>
                     <div class="col-sm-10">
-                        <input type="text" class="form-control" id="rePassword" name="rePassword" >
+                        <input type="text" class="form-control" id="rePassword" name="user[rePassword]" >
                     </div>
                 </div>
                 <div class="form-group">
@@ -48,8 +48,8 @@
                     <div class="col-sm-2">
                         <div id="targetBox" class="ruler text-center" draggable="true"
                                 >
-                            drag image in this box
                             <div id="fileList"></div>
+                            <progress max="100" value="0"></progress>
                         </div>
                         <!--
                                             <input type="file" class="form-control" id="headerImg" name="headerImg" >
@@ -90,14 +90,23 @@
 </body>
 <script src="javascripts/jquery-1.11.0.min.js"></script>
 <script src="javascripts/foundation.min.js"></script>
+<script src="javascripts/image-clip.js"></script>
 <script src="javascripts/ajax-upload-file.js"></script>
 <script>
+
+    <%
+    if(!(typeof(success)=="undefined")&&success==false){
+    %>
+    alert("<%=err%>");
+    <%
+    }
+    %>
     $(document).foundation();
-    $.ajaxUpload({dragBox:"targetBox",fileList:"fileList",postUrl:"/uploadFile",fileName:"headerImg",callback:function(data){
-          if(data.filePath){
+    $.ajaxUpload({oneFile:true,dragBox:"targetBox",type:"png jpg jpeg ",imageClip:true,fileList:"fileList",fileName:"headerImg",callback:function(data){
+         /* if(data.filePath){
               document.getElementById("headerImgPrev").src=data.filePath;
           }
-
+*/
     }});
 </script>
 </html>

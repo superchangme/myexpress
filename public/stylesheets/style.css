@@ -1,5 +1,5 @@
 body {
-  background: lightsteelblue;
+  background: #b0c4de;
 }
 footer {
   text-align: center;
@@ -8,13 +8,135 @@ footer {
   margin-top: 50px;
 }
 .reg-page .ruler {
-  height: 100px;
-  width: 200px;
+  height: 280px;
+  width: 250px;
   border: 2px dotted #cccccc;
+}
+.reg-page .ruler li {
+  list-style: none;
 }
 .reg-page .over {
   background: #269abc;
 }
 .red {
   color: red;
+}
+/*reg*/
+#targetBox {
+  position: relative;
+  background: #ffffff;
+}
+#targetBox:after {
+  content: "拖到这里上传";
+  position: absolute;
+  text-shadow: 0px 1px 1px #000;
+  top: 50%;
+  left: 0;
+  right: 0;
+  z-index: -1;
+  margin-top: -15px;
+  height: 30px;
+  line-height: 30px;
+  font-size: 16px;
+  color: #fff;
+  text-align: center;
+}
+#targetBox progress {
+  position: absolute;
+  left: 0px;
+  bottom: 0px;
+  height: 28px;
+  border: 1px solid green;
+  width: 100%;
+}
+.palette .small-6 {
+  height: 55px;
+  border: 4px solid lightcyan;
+  background-clip: content-box;
+  padding: 2px;
+  cursor: pointer;
+}
+.palette .small-6.current {
+  border-color: dimgrey ;
+}
+.palette .small-6.black {
+  background-color: #000;
+}
+.palette .small-6.white {
+  background-color: #fff;
+}
+.palette .small-6.white {
+  background-color: #fff;
+}
+.palette .small-6.red {
+  background-color: #f00;
+}
+.palette .small-6.grey {
+  background-color: #808080;
+}
+.palette .small-6.green {
+  background-color: #0f0;
+}
+.palette .small-6.blue {
+  background-color: #00f;
+}
+.palette .small-6.sienna {
+  background-color: sienna;
+}
+.palette .small-6.pink {
+  background-color: pink;
+}
+.palette .small-6.purple {
+  background-color: purple;
+}
+.palette .small-6.yellow {
+  background-color: #ffff00;
+}
+.paint-content {
+  max-width: 100%!important;
+}
+.paint-body {
+  height: 100%;
+}
+.paint-body .wrap {
+  position: relative;
+  height: 100%;
+}
+.paint-body .paint-container {
+  /*border-width:15px;
+    border-radius:10px ;*/
+  padding-left: 3px;
+  /*  border-image: -webkit-linear-gradient(45deg,seagreen,dodgerblue) 10 ;
+  */
+}
+.paint-body .palette {
+  white-space: nowrap;
+  background: lightcyan;
+  border-left: 1px solid dodgerblue ;
+  height: 100%;
+}
+.paint-body .palette .op-btn {
+  margin-bottom: 0em;
+}
+.paint-body .palette .row {
+  padding-left: 5px;
+}
+.paint-body canvas {
+  padding: 0;
+  height: 100%;
+}
+@media only screen and (max-width: 768px) {
+  .paint-body canvas {
+    width: 100%;
+    height: 70%;
+  }
+  .paint-body .palette {
+    height: auto;
+    width: 100%;
+  }
+  .paint-body .palette .row {
+    float: left;
+    margin: 0;
+    width: 33.33333%;
+  }
 }

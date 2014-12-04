@@ -17,7 +17,7 @@ var userSchema=new Schema({
 },{ collection: 'user' });
 
 var User=mongodb.mongoose.model("User",userSchema);
-var UserDAO=function(){}
+var UserDAO=function(){};
 UserDAO.prototype.save=function(obj,callback){
     var instance = new User(obj);
     instance.save(function(err){
@@ -33,6 +33,7 @@ UserDAO.prototype.find=function(obj,callback){
 
 UserDAO.prototype.findOne=function(obj,callback){
     User.findOne(obj,function(err,doc){
+        console.log(err,doc)
         callback(err,doc);
     })
 }

@@ -60,7 +60,9 @@ exports.find=function(o,callback){
 }
 
 exports.findOne=function(o,callback){
+    console.log(o);
     User.findOne(o, function(err,doc){
+        console.log(err,doc)
         if(err){
             util.log("FATAL"+err);
             callback(err);

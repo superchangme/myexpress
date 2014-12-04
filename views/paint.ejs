@@ -2,192 +2,220 @@
 <html>
 <head>
     <title></title>
-     <style>
-
-         #menuList{position: absolute;z-index:1000;display: none;}
-         ul{list-style: none}
-         #menuList li a{display: inline-block;width:100px;height:20px;}
-         #menuList li a:hover{background: seagreen;cursor: pointer}
-         .ondraw{cursor: pointer}
-         #canvas{float:left;}
-         #chartBox{float:left;width:500px;height:500px;overflow-y: scroll;}
-     </style>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no">
+    <meta name="apple-mobile-app-capable" content="no"/>
+    <link rel="stylesheet" href="/stylesheets/foundation.css" />
+    <link rel="stylesheet" href="/stylesheets/style.css">
+    <!--
+        <script src="/javascripts/vendor/modernizr.js"></script>
+    -->
+    <style>
+        html,body{background: #ffffff;}
+        #menuList{position: absolute;z-index:1000;display: none;}
+        ul{list-style: none}
+        #menuList li a{display: inline-block;width:100px;height:20px;}
+        #menuList li a:hover{background: seagreen;cursor: pointer}
+        .ondraw{cursor: pointer}
+        .container{position: relative;margin:0px;}
+        .switch{margin-bottom: 0.8rem;}
+        .switch label{vertical-align: middle!important;}
+        .line5,.line10,.line15{ margin-top:1rem;display: inline-block;line-height:1.75rem;height: 3px;width: 80px;background: #000000; }
+        .line10{height: 10px;}
+        .line15{height: 15px;}
+        .eraser{
+            margin-top: -16px;
+            margin-left: -16px;
+            background: url(/images/eraser.png) no-repeat;
+            background-size: cover;
+            height: 48px;
+            width: 48px;
+            display: none;
+            position: absolute;
+            z-index: 1;
+        }
+    </style>
 </head>
-<body>
-<p>欢迎您，<strong><%=user.username%></strong>。
-    <a href="/logout">退出</a>|<a href="/userProfile">个人中心</a></p>
-<canvas width=500 height=500 style="margin:50px;border:1px solid blue" name="canvas" ></canvas>
-<div id="chartBox">
+<body class="paint-body">
+<div class="paint-container wrap">
+    <div class="row wrap paint-content">
+        <!--    <h2>
+                draw box
+            </h2>-->
+        <div class="eraser"></div>
+        <canvas class=" medium-10 small-12 op-btn columns"   id="canvas" height="530" ></canvas>
+        <div class="medium-2 small-4 end columns palette small-text-center">
+            <h3>palette box</h3>
+            <div class="row colorBox">
+                <div class="columns  small-6 black current">
+                </div><!--
+                <div class="columns  small-4 grey">
+                </div>-->
+                <div class="columns  small-6 sienna">
+                </div>
+                <div class="columns  small-6 red">
+                </div>
+                <div class="columns  small-6 blue">
+                </div>
+                <div class="columns  small-6 yellow">
+                </div>
+                <!--<div class="columns  small-4 purple">
+                </div>--><!--
+                <div class="columns  small-4 pink">
+                </div>-->
 
+                <div class="columns  small-6 green end">
+                </div>
+            </div>
+            <div class="row ">
+                <h3>Line Size</h3>
+                <div class="switch small">
+                    <input id="line1" type="radio" checked value="3" name="lineGroup">
+                    <label for="line1"></label>
+                    <span class="line5"></span>
+                </div>
+                <div class="switch small">
+                    <input id="line2" type="radio"  value="10" name="lineGroup">
+                    <label for="line2"></label>
+                    <span class="line10"></span>
+                </div>
+                <div class="switch small">
+                    <input id="line3" type="radio" value="15" name="lineGroup">
+                    <label for="line3"></label>
+                    <span class="line15"></span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="columns small-12 op-btn">
+                    <button class="small round  " id="backStep" >← Back</button>
+                </div>
+                <div class="columns small-12 op-btn">
+                    <button class="small round  " id="forwardStep" >Forward →</button>
+                </div>
+                <div class="columns small-12 op-btn">
+                    <button class="small round button " id="eraser" >Use Eraser</button>
+                </div>
+
+                <div class="columns small-12 op-btn">
+                    <button class="small round warning " id="clearAll" >Clear All</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="menuList" data-close="true">
+        <ul>
+            <li>
+                <a data-fc="wipe">换橡皮擦</a>
+            </li>
+            <li>
+                <a data-fc="paint">换画笔</a>
+            </li>
+            <li>
+                <a data-fc="drop">清空</a>
+            </li>
+        </ul>
+
+    </div>
 </div>
-
-<div id="menuList">
-       <ul>
-           <li>
-              <a data-fc="cha">换橡皮擦</a>
-           </li>
-           <li>
-               <a data-fc="hua">换画笔</a>
-           </li>
-       </ul>
-
-</div>
-<script src="/javascripts/jquery-1.11.0.min.js"></script>
+</body>
+<script src="/javascripts/vendor/jquery.js"></script>
+<script src="/javascripts/vendor/fastclick.js"></script>
+<script src="/javascripts/foundation.min.js"></script>
 <script src="/socket.io/socket.io.js" type="text/javascript"></script>
 <script src="/javascripts/config.js"></script>
+<script src="/javascripts/draw.js"></script>
 <script>
-    var socket = io.connect(_server);
+    $(document).foundation();
+    /*   var socket = io.connect(_server);*/
+    var socket = io('/paint');
+    var canvas=document.getElementById("canvas");
+    var ctx=canvas.getContext("2d");
+    ctx.strokeStyle="blue";
 
-    var canvas=document.getElementsByName("canvas");
-    for(var i=0;i<canvas.length;i++){
-        var ctx=canvas[i].getContext("2d");
-        ctx.strokeStyle="blue";
-    }
+    /* $("#menuList").delegate("a","click",function(e){
+     var fc=$(this).data("fc");
+     update(e,fc);//wipe paint drop
+     if(fc=="wipe"){
+     $(canvas).data("wipe",true);
+     }else{
+     $(canvas).data("wipe",false);
+     }
+     $("#menuList").hide()
+     });
 
-     //var socket = io.connect('http://www.superchangme.com:3000/');
-    var Draw=(function(){
-        var draw =function(color,lineWidth,lineStyle){
-               ctx.strokeStyle=color;
-               ctx.lineWidth=lineWidth;
-               ctx.lineCap=ctx.lineJoin=lineStyle?lineStyle:"";
-               this.isMenuOn=false;
-               this.isMove=false;
-               this.init();
-         }
-            draw.prototype.begin=function(){
-                var me=this;
-                $(canvas).bind("mousedown",$.proxy( me, "record" )) ;
-                $(canvas).bind("mousemove",$.proxy( me, "paint" )) ;
-                $(canvas).bind("mouseup",$.proxy( me, "close" )) ;
-                  socket.on('paint act', function(msg) {
-                                         var e={which:msg.which,offsetX:msg.offsetX,offsetY:msg.offsetY};
-                                            switch(msg.func){
-                                                   case "paint":
-                                                       me.paint(e);
-                                                       break;
-                                                   case "record":
-                                                       me.record(e);
-                                                       break;
-                                                   case "close":
-                                                       me.close(e);
-                                                       break;
-                                                    case "drop":
-                                                        me.drop(e);
-                                                        break;
-                                                    case "wipe":
-                                                        me.wipe(e);
-                                                        break;
-                                                    case "draw":
-                                                        me.draw(e);
-                                                        break;
+     $(canvas).bind("mousedown",function(e) {
+     if(e.which==3){
+     var top= e.pageY-20,left= e.pageX-20;
+     $("#menuList").css({top:top,left:left}).show().data('open');
+     }else if($("#menuList").data("close")){
+     $("#menuList").hide();
+     update(e,"record");
+     }
+     }) ;
 
+     $(canvas).bind("mousemove",function(e){
+     if($(canvas).data("wipe")){
+     update(e,"wipe");
+     }else{
+     update(e,"paint");
+     }
+     }) ;
 
-                                               }
-                                });
-                $("#menuList").delegate("a","click",function(){
+     $(canvas).bind("mouseup",function(e){
+     update(e,"close");
+     }) ;*/
 
-                   $("#menuList").hide();
-                    if($(this).data("fc")=="cha"){
-                        ctx.strokeStyle="white";
-                    }else{
-                        ctx.strokeStyle="red";
-                    }
-                    me.isMenuOn=false;
-                });
-            }
-
-            draw.prototype.paint=function(e){
-                var x= e.offsetX,y= e.offsetY;
-
-                if(this.isMove){
-                    ctx.lineTo(x, y);
-                    console.log("paint in",e)
-                    ctx.stroke();
-                }
-            }
-
-            draw.prototype.record=function(e){
-            console.log("record in",e)
-                var x= e.offsetX,y= e.offsetY;
-                if(this.isMenuOn){
-
-
-                }else{
-                    if(e.which===1){
-                        this.isMove=true;
-                        ctx.beginPath();
-                        ctx.moveTo(x,y);
-                        $(canvas).addClass("ondraw");
-                    }else if(e.which==3){
-                        var top= e.pageY-20,left= e.pageX-20;
-                        console.log(top,left)
-                        $("#menuList").css({top:top,left:left}).show();
-                        this.isMenuOn=true;
-                    }
-                }
-            }
-
-            draw.prototype.close=function(e){
-            console.log("close in",e)
-                this.isMove=false;
-                $(canvas).removeClass("ondraw");
-                ctx.closePath();
-            }
-
-            draw.prototype.init=function(){
-                this.begin();
-            }
-
-            draw.prototype.drop=function(){
-                console.log("drop in----",canvas.width);
-                ctx.clearRect(0,0,canvas[0].width,canvas[0].height);
-            }
-
-            draw.prototype.wipe=function(e){
-                var x= e.offsetX,y= e.offsetY;
-                if(this.isMove){
-                    ctx.clearRect(x, y,20,10);
-                    console.log("wipe in",e)
-                }
-            }
-
-
-        return draw;
-
-    })();
-
-    $(canvas).bind("mousedown",function(e) {
-        update(e,"record");
-    }) ;
-
-    $(canvas).bind("mousemove",function(e){
-        update(e,"paint");
-    }) ;
-
-    $(canvas).bind("mouseup",function(e){
-        update(e,"close");
-    }) ;
-
-
-    function update(e,act){
-        socket.emit('paint msg', {
-            func : act,
-            offsetX :e.offsetX,
-            offsetY :e.offsetY,
-            which :e.which
-        });
-    }
-
+    //var socket = io.connect('http://www.superchangme.com:3000/');
+    var fku={};
+    fku.da="dada"
     $(function(){
+        canvas.width=$(canvas).width();
+        canvas.height=$(canvas).height();
+        var draw=new Draw({eraser:$(".eraser"),isPainter:true,canvas:canvas,socket:socket,lineWidth:3,lineStyle:"round"});
+        $(".colorBox .columns").each(function(){
+            $(this).data("color",$(this)[0].className.split(" ")[3])
+        });
+        $(".colorBox").on("click",".columns",function(){
+            var style=$(this).data("color");
+            draw.changeStyle({"style":"strokeStyle",value:style},"changeStyle");
+            $(this).addClass("current").siblings().removeClass("current");
+        });
+        $("#eraser").on("click",function(){
+            draw.wipe();
+            draw.update({"style":"strokeStyle",value:"white"},"changeStyle");
+            $(".colorBox .columns.current").removeClass("current");
+        });
 
-       var draw= new Draw("red",10,"round");
 
-            $(document).bind("contextmenu",function(){return false;});
+        $("#clearAll").on("click",function(){
+            draw.clearAll();
+            $(".switch:eq(0) label").click();
+            if(ctx.strokeStyle=="white"){
+                $(".colorBox .columns:eq(0)").click();
+            }
+            draw.update({},"clearAll");
+        });
+        $(".switch").click(function(e){
+            draw.ctx.lineWidth=$("[name=lineGroup]:checked").val();
+            if($(e.target).is("span")){
+                $(this).find("input").prop("checked",true);
+            }
+        });
+        $("#backStep").click(function(){
+            if(draw.history(-1)){
 
+            }else{
+            }
+        });
+        $("#forwardStep").click(function(){
+            if(draw.history(1)){
 
+            }else{
+            }
+        });
 
-    })
-
+        $(document).bind("contextmenu",function(){return false;});
+    });
 </script>
-</body>
 </html>

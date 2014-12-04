@@ -5,6 +5,7 @@
 var User = require("./../models/User");
 var fs =require("fs");
 var util=require("util");
+var upload=require("./upload");
 exports.list = function(req, res){
   res.send("respond with a resource");
 };
@@ -13,8 +14,8 @@ exports.client = function(req, res){
     res.render('client', { title: 'Express' });
 };
 
-exports.phoneUser = function(req, res){
-    res.render('phoneUser', { title: 'Express' });
+exports.paintView = function(req, res){
+    res.render('paintView', { title: 'Express' });
 };
 /*
 exports.paint = function(req, res){
@@ -31,14 +32,19 @@ exports.doLogin=function(req,res){
             res.redirect('paint');
         }else{
             User.findOne(loginUser,function(err,doc){
-              //  console.log(loginUser,"find user---",doc)
+                console.log(loginUser,"find user---",doc)
                 if(doc){
+                    var redirect=req.body.redirect&&decodeURI(req.body.redirect);
                     //set into user session
                     //usersWs[doc.name]=doc;
                     req.session.user=doc;
-                    res.redirect('/paint');
+                    if(redirect!=null){
+                        res.redirect(redirect);
+                    }else{
+                        res.redirect("/");
+                    }
                 }else{
-                    res.render('login',{message:'username or password is wrong'});
+                    res.render('login',{message:'username or password is wrong',redirect:req.query.redirect});
                 }
             })
 
@@ -67,37 +73,49 @@ exports.addOrUpdate=function(req,res){
             json.headerImgType=req.files.headerImg.type;
             json.headerImgPath = req.headerImg[0].path;
         }*/
-       json.headerImgPath = req.body.headerImg[0];
-        User.find(json,function(err,doc){
-            if(err){
-                 res.send({"success":false,"err":err});
-             }else if(!err && doc.length>0){
-                 res.send({"success":false,"err":"用户已存在"});
-             }else{
-                console.log("save user---",json,req.body);
-                 User.save(json,function(err){
-                     if(err){
-                         res.status("500").send({"success":false,"err":err});
-                     }else{
-                         req.session.user=json;
-                         res.status("200").send({"success":true});
-                     }
-                 })
-             }
-        })
+      upload.upLoadImage(req,res,{imgData:req.body.headerImg},true).then(function(webPath){
+          json.headerImgPath = webPath;
+          for(var p in json){
+              if(!json[p]||json[p]===""){
+                  res.render("reg",{"success":false,err:"信息不完整"});
+                  return;
+              }
+          }
+          User.find({username:json.username},function(err,doc){
+              if(err){
+                  res.render("reg",{"success":false,"err":err});
+              }else if(!err && doc.length>0){
+                  res.render("reg",{"success":false,"err":"用户已存在"});
+              }else{
+                  console.log("save user---",json,req.body);
+                  User.save(json,function(err){
+                      if(err){
+                          res.status("500").send({"success":false,"err":err});
+                      }else{
+                          req.session.user=json;
+                          res.redirect("/login");
+                      }
+                  })
+              }
+          })
+      });
+
+
     }
 }
 
 exports.userProfile=function(req,res){
-    console.log("in user profile",req.session.user)
     if(req.session.user){
-        User.findOne(req.session.user,function(err,doc){
+        //console.log("in user profile",req.session.user)
+        User.findOne({username:req.session.user.username},function(err,doc){
             if(err){
-                res.render("error",{"err":err});
+          //      console.log(err);
+                res.render("userProfile",{success:false,"err":err});
             }else if(doc){
-                //deal image
-                console.log("get user profile ",doc)
+               // console.log("get user profile ",doc)
                 res.render("userProfile",{user:doc});
+            }else{
+                res.render("userProfile",{success:false,"err":"该用户不存在"});
             }
         })
     }else{

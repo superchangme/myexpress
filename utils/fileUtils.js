@@ -12,6 +12,8 @@
  *
  */
 var promise = require('promise');
+var _webPath=require('../config').G.FIlEWEBPATH;
+
 function mkDir(path) {
     var path = getFileDir(path);
     var ndir = require('ndir');
@@ -32,3 +34,10 @@ function getFileDir(path) {
     return basePath+"/"+path /*+ day.getTime() + '/'*/;
 }
 exports.mkDir = mkDir;
+exports.rePath=function(file,filePath){
+    var day = new Date;
+    var dateStr = day.getFullYear() + '-' + day.getMonth() + '-' + day.getDate();
+    var name = day.getTime()+"."+file.name.replace(/(.*)\.(.*)/g,"$2");
+    this.realPath=filePath+"/"+name;
+    this.webPath = _webPath + dateStr + '/'+ name;
+}

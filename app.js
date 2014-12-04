@@ -15,6 +15,7 @@ var path = require('path');
 var io = require('socket.io');
 var fs = require('fs');
 var socketUser = {};
+var nsp={};
 /*
 var User = require('./dao/userModel');
 */
@@ -45,7 +46,8 @@ app.use(express.favicon());
 app.use(express.logger('dev'));
 app.use(express.bodyParser({
    /* uploadDir:__dirname+'/public/temp'*/
-    uploadDir:__dirname+'/temp'
+    uploadDir:__dirname+'/temp',
+    maxFieldsSize:10 * 1024 * 1024
 }));
 app.use(express.urlencoded());
 app.use(express.methodOverride());
@@ -61,7 +63,7 @@ app.use(function(req, res, next){
     req.locals=app.locals;
     req.locals.user=req.session.user;
    // res.locals.user = req.session.user;
-   // console.log("in main",req.locals,req.user,req.session.user)
+   //console.log("in main",req.locals,req.user,req.session.user)
     next();
 });
 
@@ -76,12 +78,12 @@ if ('development' == app.get('env')) {
 
 
 app.get('/', routes.index);
-app.all(/\/(?!^(login|doLogin|reg|chat.*|games\/*)$)^[\S]+$/,authentication);
+app.all(/(?!^\/(login|doLogin|reg|games|socket.io|javascripts|stylesheets|images|fonts)(\/.*)?$)^\/[\S]+$/,authentication);
 app.all('/login', notAuthentication);
 app.post('/doLogin',user.doLogin);
 app.get('/users', user.list);
 app.get('/client', user.client);
-app.get('/phoneUser', user.phoneUser);
+app.get('/paint/view', user.paintView);
 app.get("/reg",user.reg);
 app.post('/reg',user.addOrUpdate);
 app.get("/userProfile",user.userProfile);
@@ -89,6 +91,7 @@ app.get("/showUserImg",user.showUserImg);
 app.get('/logout', authentication);
 app.get('/logout',user.logout);
 app.post('/uploadFile',upload.uploadFile);
+app.post('/uploadImage',upload.upLoadImage);
 app.post('/testUpload',user.testUpload);
 app.engine('html', require('ejs').renderFile);
  //首页逻辑
@@ -97,9 +100,10 @@ app.get('/login',function(req,res){
 
     if( req.session.user ){
         //需要判断下是否已经登录
-        res.redirect('paint');
+        res.redirect('index');
     }else{
-        res.render("login",{message:""});
+        var redirect=req.query.redirect;
+        res.render("login",{message:"",redirect:redirect});
     }
 });
 
@@ -111,7 +115,7 @@ app.get('/paint',function(req,res){
 
 app.all("/chat/:id",chat.main);
 app.get("/chat_room",function(req,res){
-    console.log(req.locals.user)
+    //console.log(req.locals.user)
     res.render('chat_room', { rooms: chatRooms,user:req.locals.user });
 });
 app.post("/chat_room",function(req,res){
@@ -123,7 +127,7 @@ app.get("/games/shudu",games.shudu);
 
 var server=http.createServer(app/*options,app*/).listen(app.get('port'), function(){
 
-    console.log('Express server listening on port ' + app.get('port'));
+   console.log('Express server listening on port ' + app.get('port'));
 });
 
 //创建webscoket监听服务器
@@ -142,7 +146,7 @@ sio.set('authorization', function (handshakeData, callback) {
     // 通过客户端的cookie字符串来获取其session数据
     var connect_sid = handshakeData.headers.cookie
         &&handshakeData.headers.cookie.split("=")[1];
-    // console.log("connect_sid----",handshakeData.headers.cookie);
+    //console.log("connect_sid----",handshakeData.headers.cookie);
     //console.log("store----",store)
     if (connect_sid) {
         store.get(connect_sid, function(error, session){
@@ -163,6 +167,16 @@ sio.set('authorization', function (handshakeData, callback) {
 });
 
 //'connection' 是socket.io 保留的，
+nsp.paint = sio.of('/paint');
+//paint
+nsp.paint.on("connection",function(socket){
+    socket.on('paint msg',function(data){
+        //console.log('Get a msg from client ...');
+        //console.log(data);
+        socket.broadcast.emit('paint act',data);
+    });
+});
+
 sio.sockets.on('connection',function(socket){/*
     var data.name=socket.handshake.headers.cookie
         &&socket.handshake.headers.cookie.split("=")[2];*/
@@ -177,8 +191,8 @@ sio.sockets.on('connection',function(socket){/*
         }
         socket.emit("create room success",{room:data.room,nickname:data.nickname,roomId:id});
         socket.join("chatRoom_"+id,function(){
-            console.log(data.nickname+"create room chatRoom_"+id);
-            console.log(socket.rooms)
+            //console.log(data.nickname+"create room chatRoom_"+id);
+            //console.log(socket.rooms)
             var room={};
             room.room=data.room;
             room.usersWs={};
@@ -201,7 +215,7 @@ sio.sockets.on('connection',function(socket){/*
             msg.msg="这货是谁";
         }
 
-        console.log('in room ready',msg,data.name,chatRooms[data.roomId])
+       console.log('in room ready',msg,data.name,chatRooms[data.roomId])
         socket.emit('in room ready',msg);
     });
     //请求加入房间
@@ -229,13 +243,13 @@ sio.sockets.on('connection',function(socket){/*
                 socket.join("chatRoom_"+roomId,function(){
                     refresh_online(roomId);
                     socket.emit('join room ready',{nickname:data.name,room:chatRooms[roomId].room});
-                    console.log("new user "+data.name,"join to chatRoom_"+roomId,socket.rooms)
+                   console.log("new user "+data.name,"join to chatRoom_"+roomId,socket.rooms)
                 });
                 return;
             }
         }
         socket.emit('join room ready',{failed:true,msg:"聊天室不存在"});
-        console.log("no chat room go to roomlist")
+       console.log("no chat room go to roomlist")
     });
     socket.on('subscribe', function(data) {
         socket.join(data.room);
@@ -260,7 +274,7 @@ sio.sockets.on('connection',function(socket){/*
             }
             users.push(user);
         }
-        console.log("refresh_online",chatRooms[roomId],roomId)
+       console.log("refresh_online",chatRooms[roomId],roomId)
         sio.sockets.in("chatRoom_"+roomId).emit('online list', users);//所有人广播
     }
 
@@ -276,25 +290,20 @@ sio.sockets.on('connection',function(socket){/*
                 if(chatRooms[data.roomId].usersWs[data.to[i]]!=null){
                     var toUser=chatRooms[data.roomId].usersWs[data.to[i]].socketId;
                     data.private=true;
-                    console.log("socket",toUser)
+                   console.log("socket",toUser)
+                    //except self
                     socket.broadcast.to(toUser).emit('chat receive',data);
-                    console.log('Get a chat msg from client ...',data,"send to",data.to);
+                   console.log('Get a chat msg from client ...',data,"send to",data.to);
                 }
             }
         }else{
-            console.log('Get a chat msg from client ...',data,"send to","chatRoom_"+data.roomId);
+           console.log('Get a chat msg from client ...',data,"send to","chatRoom_"+data.roomId);
             if(data.type.indexOf("file")>-1){
                 socket.broadcast.to("chatRoom_"+data.roomId).emit('chat receive',data);
             }else{
                 sio.sockets.in("chatRoom_"+data.roomId).emit('chat receive',data);
             }
         }
-    });
-    //paint
-    socket.on('paint msg',function(data){
-        //console.log('Get a msg from client ...');
-        //console.log(data);
-        socket.broadcast.emit('paint act',data);
     });
 
     //公共信息
@@ -331,16 +340,18 @@ function notAuthentication(req, res, next) {
     //console.log("user---",req)
     if (req.session.user) {
         req.session.error='已登陆';
-        console.log("you are logged")
+       console.log("you are logged")
         return res.redirect('/paint');
     }
     next();
 }
 
 function authentication(req, res, next) {
+   //console.log("auth",req.session.user)
     if (!req.session.user) {
         req.session.error='请先登陆';
-        return res.redirect('/login');
+        var redirect=encodeURI(req.originalUrl);
+        return res.redirect('/login?redirect='+redirect);
     }
     next();
 }

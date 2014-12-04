@@ -164,11 +164,13 @@
         }
 
         draw.prototype.wipe=function(e){
-            var x= e.offsetX,y= e.offsetY;
+            this.erasing=true;
+            $(this.eraser).show();
+           /* var x= e.offsetX,y= e.offsetY;
             if(this.isMove){
                 ctx.clearRect(x, y,20,10);
                 console.log("wipe in",e)
-            }
+            }*/
         }
 
 
