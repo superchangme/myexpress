@@ -61,45 +61,53 @@ defer.promise.done(function(){
 */
  var dirPath=__dirname+"/jiabao";
 /*image&&file traverse*/
-fs.stat(dirPath,function (err,status) {
-    if(status.isDirectory()){
-        fs.readdir(dirPath,function(err,files){
-            (function next(i){
-                if(i<files.length){
-                    console.log(files.length);
-                    console.log(i);
-                    var oldName = path.join(dirPath,files[i]);
-/*
-                    var newName = path.join(dirPath,"xu"+i+".jpg");
-*/
-                    resize({
-
-                        srcPath: oldName,
-                        dstPath: oldName/*oldName.split(".jpg")[0]+"_thumb.jpg"*/,
-                        width:   1000 ,
-                        quality:1
-                    }).then(function(err){
-                        if(err){
-                            console.log(err);
+function resizeAll(dirPath){
+    fs.stat(dirPath,function (err,status) {
+        if(status.isDirectory()){
+            fs.readdir(dirPath,function(err,files){
+                (function next(i){
+                    if(i<files.length){
+                        var oldName = path.join(dirPath,files[i]);
+                        var stats=fs.statSync(oldName);
+                        if(stats.isDirectory()){
+                           resizeAll(oldName);
+                           next(++i);
                         }else{
-                            next(++i);
+                            console.log(i,oldName);
                         }
-                    });
-                   /* fs.rename(oldName,newName,function(err){
-                        if(err){
-                            console.log(err);
-                        }else{
-                            next(++i);
-                        }
-                    });*/
-                }else{
-                    alert("ok");
-                }
-            }(0));
+                        /*
+                         var newName = path.join(dirPath,"xu"+i+".jpg");
+                         */
+                        resize({
 
-        });
-    }
-})
+                            srcPath: oldName,
+                            dstPath: oldName/*oldName.split(".jpg")[0]+"_thumb.jpg"*/,
+                            width:   120 ,
+                            quality:1
+                        }).then(function(err){
+                            if(err){
+                                console.log(err);
+                            }else{
+                                next(++i);
+                            }
+                        });
+                        /* fs.rename(oldName,newName,function(err){
+                         if(err){
+                         console.log(err);
+                         }else{
+                         next(++i);
+                         }
+                         });*/
+                    }else{
+                        alert("ok");
+                    }
+                }(0));
 
+            });
+        }
+    })
+}
+
+resizeAll(dirPath);
 
 
