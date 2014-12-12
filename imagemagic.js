@@ -73,24 +73,32 @@ function resizeAll(dirPath){
                            resizeAll(oldName);
                            next(++i);
                         }else{
-                            console.log(i,oldName);
+                            im.identify(oldName, function(err, features){
+                                if (err) throw err;
+                                if(features.width>1000){
+                                    console.log(i,oldName,features.width);
+                                    resize({
+                                        srcPath: oldName,
+                                        dstPath: oldName/*oldName.split(".jpg")[0]+"_thumb.jpg"*/,
+                                        width:   1000 ,
+                                        quality:1
+                                    }).then(function(err){
+                                        if(err){
+                                            console.log(err);
+                                        }
+                                    });
+                                }else{
+                                    //do nothing
+                                }
+                                next(++i);
+                                // { format: 'JPEG', width: 3904, height: 2622, depth: 8 }
+                            });
+
                         }
                         /*
                          var newName = path.join(dirPath,"xu"+i+".jpg");
                          */
-                        resize({
 
-                            srcPath: oldName,
-                            dstPath: oldName/*oldName.split(".jpg")[0]+"_thumb.jpg"*/,
-                            width:   120 ,
-                            quality:1
-                        }).then(function(err){
-                            if(err){
-                                console.log(err);
-                            }else{
-                                next(++i);
-                            }
-                        });
                         /* fs.rename(oldName,newName,function(err){
                          if(err){
                          console.log(err);
@@ -99,7 +107,7 @@ function resizeAll(dirPath){
                          }
                          });*/
                     }else{
-                        alert("ok");
+                        //alert("ok");
                     }
                 }(0));
 
